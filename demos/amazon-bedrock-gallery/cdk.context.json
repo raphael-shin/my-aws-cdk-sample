@@ -1,2 +1,4 @@
 {
+    "s3_face_image_bucket_name": "your-face-image-bucket-name",
+    "s3_result_image_bucket_name": "your-result-image-bucket-name"
 }

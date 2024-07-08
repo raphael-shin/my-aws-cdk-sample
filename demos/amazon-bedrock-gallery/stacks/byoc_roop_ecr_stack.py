@@ -1,4 +1,4 @@
-from aws_cdk import CfnOutput, Stack
+from aws_cdk import CfnOutput, Stack, RemovalPolicy
 from aws_cdk import aws_ecr as ecr
 from constructs import Construct
 
@@ -7,7 +7,10 @@ class ByocRoopEcrStack(Stack):
         super().__init__(scope, id, **kwargs)
 
         # Create an ECR repository
-        self.repository = ecr.Repository(self, "ByocRoopRepository", repository_name="byoc-roop-repo")
+        self.repository = ecr.Repository(self, "ByocRoopRepository", 
+                                         repository_name="byoc-roop-repo",
+                                         removal_policy=RemovalPolicy.DESTROY,
+                                         auto_delete_images=True)
         
         # Outputs
         CfnOutput(self, "ByocRoopRepositoryUri", value=self.repository.repository_uri, description="The URI of the BYOC ROOP ECR repository")
