@@ -2,32 +2,23 @@ import json
 import boto3
 import os
 import urllib.parse
-import uuid
 import time
 
 sagemaker_runtime = boto3.client('sagemaker-runtime')
 s3 = boto3.client('s3')
 
 def lambda_handler(event, context):
-    # Parse the S3 event
-    invocation_id = str(uuid.uuid4())
+
     s3_event = event['Records'][0]['s3']
-    
     bucket = s3_event['bucket']['name']
     source_key = urllib.parse.unquote_plus(s3_event['object']['key'])
-    
-    # Check if the uploaded file is in the 'masked-faces' directory
-    if 'masked-faces' not in source_key:
-        print(f"Ignoring file not in 'masked-faces' directory: {source_key}")
-        return
-    
-    # Set the source image (static)
+    uuid = os.path.basename(source_key).split('.')[0]
     target_key = 'gallery/images/portrait_painting_italy.png'
-    output_key = f"gallery/images/roop/{os.path.basename(source_key)}"
+    output_key = f"{os.environ['OUTPUT_PATH']}{uuid}.png"
     
     # Prepare the input for the SageMaker endpoint
     input_data = {
-        'uuid': invocation_id,
+        'uuid': uuid,
         'bucket': bucket,
         'source': source_key,
         'target': target_key,

@@ -12,27 +12,15 @@ from aws_cdk import (
 )
 from constructs import Construct
 
-class SageMakerEndpointLambdaStack(Stack):
+class ImageProcessingLambdaStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, roop_endpoint_name: str, gfpgan_endpoint_name: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        bucket = s3.Bucket(self, "ImageBucket",
-            bucket_name=Fn.join('-', ['bedrock-y', Fn.ref('AWS::AccountId')]),
-            removal_policy=RemovalPolicy.DESTROY,
-            auto_delete_objects=True
-        )
-
-        # Klayers-p38-Pillow Layer 참조
-        pillow_layer = lambda_.LayerVersion.from_layer_version_arn(
-            self, "PillowLayer",
-            layer_version_arn="arn:aws:lambda:us-east-1:770693421928:layer:Klayers-p38-Pillow:10"
-        )
-
-        # Klayers-p38-numpy Layer 참조
-        numpy_layer = lambda_.LayerVersion.from_layer_version_arn(
-            self, "NumpyLayer",
-            layer_version_arn="arn:aws:lambda:us-east-1:770693421928:layer:Klayers-p38-numpy:13"
-        )
+        s3_bucket_name = self.node.try_get_context("s3_bucket_name")
+        s3_faces_image_path = self.node.try_get_context("s3_faces_image_path")
+        s3_masked_faces_image_path = self.node.try_get_context("s3_masked_faces_image_path")
+        s3_swapped_faces_image_path = self.node.try_get_context("s3_swapped_faces_image_path")
+        s3_results_image_path = self.node.try_get_context("s3_results_image_path")
 
         # Create IAM role for Lambda functions
         lambda_role = iam.Role(self, "LambdaExecutionRole",
@@ -52,7 +40,8 @@ class SageMakerEndpointLambdaStack(Stack):
             timeout=Duration.seconds(300),
             memory_size=1024,
             environment={
-                "SAGEMAKER_ENDPOINT_NAME": roop_endpoint_name
+                "SAGEMAKER_ENDPOINT_NAME": roop_endpoint_name,
+                "OUTPUT_PATH": s3_faces_image_path
             },
             role=lambda_role
         )
@@ -65,12 +54,26 @@ class SageMakerEndpointLambdaStack(Stack):
             timeout=Duration.seconds(300),
             memory_size=1024,
             environment={
-                "SAGEMAKER_ENDPOINT_NAME": gfpgan_endpoint_name
+                "SAGEMAKER_ENDPOINT_NAME": gfpgan_endpoint_name,
+                "OUTPUT_PATH": s3_results_image_path,
             },
             role=lambda_role
         )
 
         # Face Detection Lambda 함수 생성
+        
+        # Klayers-p38-Pillow Layer 참조
+        pillow_layer = lambda_.LayerVersion.from_layer_version_arn(
+            self, "PillowLayer",
+            layer_version_arn="arn:aws:lambda:us-east-1:770693421928:layer:Klayers-p38-Pillow:10"
+        )
+
+        # Klayers-p38-numpy Layer 참조
+        numpy_layer = lambda_.LayerVersion.from_layer_version_arn(
+            self, "NumpyLayer",
+            layer_version_arn="arn:aws:lambda:us-east-1:770693421928:layer:Klayers-p38-numpy:13"
+        )
+
         face_detection_lambda = lambda_.Function(self, "FaceDetectionLambda",
             runtime=lambda_.Runtime.PYTHON_3_8,
             handler="index.lambda_handler",
@@ -89,22 +92,29 @@ class SageMakerEndpointLambdaStack(Stack):
             resources=["*"]
         ))
 
+        # Create S3 bucket
+        bucket = s3.Bucket(self, "GenAiGalleryBucket",
+            bucket_name=s3_bucket_name,
+            removal_policy=RemovalPolicy.DESTROY,
+            auto_delete_objects=True
+        )
+
         # face detection S3 이벤트 트리거 설정
         face_detection_lambda.add_event_source(lambda_events.S3EventSource(bucket,
             events=[s3.EventType.OBJECT_CREATED],
-            filters=[s3.NotificationKeyFilter(prefix="gallery/images/faces/")]
+            filters=[s3.NotificationKeyFilter(prefix=s3_faces_image_path)]
         ))
 
         # roop S3 이벤트 트리거 설정
         roop_lambda.add_event_source(lambda_events.S3EventSource(bucket,
             events=[s3.EventType.OBJECT_CREATED],
-            filters=[s3.NotificationKeyFilter(prefix="gallery/images/masked-faces/")]
+            filters=[s3.NotificationKeyFilter(prefix=s3_masked_faces_image_path)]
         ))
 
         # gfpgan S3 이벤트 트리거 설정
         gfpgan_lambda.add_event_source(lambda_events.S3EventSource(bucket,
             events=[s3.EventType.OBJECT_CREATED],
-            filters=[s3.NotificationKeyFilter(prefix="gallery/images/roop/")]
+            filters=[s3.NotificationKeyFilter(prefix=s3_swapped_faces_image_path)]
         ))
         
         # Output the Lambda function names and ARNs

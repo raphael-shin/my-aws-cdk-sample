@@ -7,7 +7,7 @@ from stacks.byoc_gfpgan_ecr_stack import ByocGfpganEcrStack
 from stacks.byoc_gfpgan_codebuild_stack import ByocGfpganCodeBuildStack
 from stacks.codebuild_trigger_stack import CodeBuildTriggerStack
 from stacks.sagemaker_endpoint_stack import SageMakerEndpointStack
-from stacks.sagemaker_endpoint_lambda_stack import SageMakerEndpointLambdaStack
+from stacks.image_processing_lambda_stack import ImageProcessingLambdaStack
 
 app = cdk.App()
 
@@ -43,7 +43,7 @@ sagemaker_endpoint_stack.add_dependency(byoc_gfpgan_codebuild_stack)
 sagemaker_endpoint_stack.add_dependency(codebuild_trigger_stack)
 
 # Create the Lambda Functions stack
-lambda_functions_stack = SageMakerEndpointLambdaStack(app, "SageMakerEndpointLambdaStack",
+lambda_functions_stack = ImageProcessingLambdaStack(app, "ImageProcessingLambdaStack",
                                               roop_endpoint_name=sagemaker_endpoint_stack.roop_endpoint_name,
                                               gfpgan_endpoint_name=sagemaker_endpoint_stack.gfpgan_endpoint_name)
 

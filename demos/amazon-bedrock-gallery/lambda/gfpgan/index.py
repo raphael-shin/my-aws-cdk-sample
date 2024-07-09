@@ -1,7 +1,6 @@
 import json
 import boto3
 import os
-import uuid
 import time
 import urllib.parse
 
@@ -9,17 +8,16 @@ sagemaker_runtime = boto3.client('sagemaker-runtime')
 s3 = boto3.client('s3')
 
 def lambda_handler(event, context):
-    # Generate a unique ID for this invocation
-    invocation_id = str(uuid.uuid4())
     
     s3_event = event['Records'][0]['s3']
     bucket = s3_event['bucket']['name']
     source_key = urllib.parse.unquote_plus(s3_event['object']['key'])
-    output_key = f"gallery/images/results/{os.path.basename(source_key)}"
+    uuid = os.path.basename(source_key).split('.')[0]
+    output_key = f"{os.environ['OUTPUT_PATH']}{uuid}.png"
     
     # Prepare the input for the SageMaker endpoint
     input_data = {
-        'uuid': invocation_id,
+        'uuid': uuid,
         'bucket': bucket,
         'source': source_key,
         'output': output_key
