@@ -50,6 +50,4 @@ lambda_functions_stack = SageMakerEndpointLambdaStack(app, "SageMakerEndpointLam
 # Add dependency to ensure Lambda Functions are created after the SageMaker Endpoints
 lambda_functions_stack.add_dependency(sagemaker_endpoint_stack)
 
-
-
 app.synth()

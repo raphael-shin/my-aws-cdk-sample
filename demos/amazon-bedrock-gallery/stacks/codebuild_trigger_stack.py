@@ -11,8 +11,8 @@ class CodeBuildTriggerStack(Stack):
         # Create a Lambda function to trigger both CodeBuild projects in parallel
         trigger_lambda = lambda_.Function(self, "TriggerLambda",
             runtime=lambda_.Runtime.PYTHON_3_9,
-            handler="code_build_trigger.handler",
-            code=lambda_.Code.from_asset("lambda"),
+            handler="index.handler",
+            code=lambda_.Code.from_asset("lambda/codebuild"),
             environment={
                 "ROOP_PROJECT_NAME": roop_project_name,
                 "GFPGAN_PROJECT_NAME": gfpgan_project_name
