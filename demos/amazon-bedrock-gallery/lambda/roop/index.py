@@ -18,7 +18,6 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     try:
         s3_event = event['Records'][0]['s3']
         input_data = prepare_input_data(s3_event)
-        
         invoke_sagemaker_endpoint(input_data)
         
         output_url = wait_for_output_file(input_data['bucket'], input_data['output'])
@@ -31,8 +30,6 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 def prepare_input_data(s3_event: Dict[str, Any]) -> Dict[str, str]:
     bucket_name = s3_event['bucket']['name']
     encoded_object_key = s3_event['object']['key']
-
-    # Decode the URL-encoded object key
     source_object_key = urllib.parse.unquote_plus(encoded_object_key)
     source_filename = os.path.basename(source_object_key)
     output_object_key = f"{os.environ['OUTPUT_PATH']}{source_filename}"

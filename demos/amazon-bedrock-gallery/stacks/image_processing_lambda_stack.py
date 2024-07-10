@@ -24,7 +24,7 @@ class ImageProcessingLambdaStack(Stack):
         self.lambda_role = self.create_lambda_role()
         self.bucket = self.create_s3_bucket()
 
-        self.roop_lambda = self.create_lambda_function("RoopLambdaFunction", "lambda/roop", roop_endpoint_name, self.s3_face_images_path)
+        self.roop_lambda = self.create_lambda_function("RoopLambdaFunction", "lambda/roop", roop_endpoint_name, self.s3_swapped_face_images_path)
         self.gfpgan_lambda = self.create_lambda_function("GfpganLambdaFunction", "lambda/gfpgan", gfpgan_endpoint_name, self.s3_result_images_path)
         self.face_detection_lambda = self.create_face_detection_lambda()
 

@@ -1,6 +1,7 @@
 from aws_cdk import Stack, CustomResource
 from aws_cdk import aws_sagemaker as sagemaker
 from aws_cdk import aws_iam as iam
+from aws_cdk import aws_s3 as s3
 from constructs import Construct
 
 class SageMakerEndpointStack(Stack):
@@ -14,7 +15,9 @@ class SageMakerEndpointStack(Stack):
         sagemaker_role = iam.Role(self, "SageMakerExecutionRole",
             assumed_by=iam.ServicePrincipal("sagemaker.amazonaws.com"),
             managed_policies=[
-                iam.ManagedPolicy.from_aws_managed_policy_name("AmazonSageMakerFullAccess")
+                iam.ManagedPolicy.from_aws_managed_policy_name("AmazonSageMakerFullAccess"),
+                iam.ManagedPolicy.from_aws_managed_policy_name("AmazonS3FullAccess"),
+                iam.ManagedPolicy.from_aws_managed_policy_name("CloudWatchLogsFullAccess")
             ]
         )
 
