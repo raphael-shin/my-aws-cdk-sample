@@ -1,6 +1,9 @@
-from aws_cdk import Stack, CfnOutput
-from aws_cdk import aws_apigateway as apigw
-from aws_cdk import aws_lambda as lambda_
+from aws_cdk import (
+    Stack,
+    CfnOutput,
+    aws_apigateway as apigw,
+    aws_lambda as lambda_
+)
 from constructs import Construct
 import os
 
@@ -8,46 +11,47 @@ class ApiGatewayStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        # Get the bucket name from context
-        s3_bucket_name = self.node.try_get_context("s3_bucket_name")
-        s3_face_images_path = self.node.try_get_context("s3_face_images_path")
-        s3_result_images_path = self.node.try_get_context("s3_result_images_path")
+        self.s3_bucket_name = self.node.try_get_context("s3_bucket_name")
+        self.s3_face_images_path = self.node.try_get_context("s3_face_images_path")
+        self.s3_result_images_path = self.node.try_get_context("s3_result_images_path")
 
-        # Create API Gateway
-        api = apigw.RestApi(self, "AmazonBedrockGalleryImageApi",
+        self.api = self.create_api_gateway()
+        self.upload_lambda = self.create_lambda_function("UploadImageFunction", "upload", self.s3_face_images_path)
+        self.get_image_lambda = self.create_lambda_function("GetImageFunction", "get_image", self.s3_result_images_path)
+
+        self.create_api_resources()
+        self.create_output()
+
+    def create_api_gateway(self):
+        return apigw.RestApi(self, "AmazonBedrockGalleryImageApi",
             rest_api_name="Amazon Bedrock Gallery Image API",
             description="This service processes images.")
 
-        # Create Lambda function for image upload
-        upload_lambda = lambda_.Function(self, "UploadImageFunction",
+    def create_lambda_function(self, id, handler, object_path):
+        return lambda_.Function(self, id,
             runtime=lambda_.Runtime.PYTHON_3_9,
-            handler="upload.handler",
-            code=lambda_.Code.from_asset(os.path.join("lambda", "apis/upload")),
+            handler=f"{handler}.handler",
+            code=lambda_.Code.from_asset(os.path.join("lambda", "apis", handler)),
             environment={
-                "BUCKET_NAME": s3_bucket_name,
-                "OBJECT_PATH": s3_face_images_path
+                "BUCKET_NAME": self.s3_bucket_name,
+                "OBJECT_PATH": object_path
             })
 
-        # Create Lambda function for image retrieval
-        get_image_lambda = lambda_.Function(self, "GetImageFunction",
-            runtime=lambda_.Runtime.PYTHON_3_9,
-            handler="get_image.handler",
-            code=lambda_.Code.from_asset(os.path.join("lambda", "apis/get_image")),
-            environment={
-                "BUCKET_NAME": s3_bucket_name,
-                "OBJECT_PATH": s3_result_images_path
-            })
-
-        # Create API Gateway resources and methods
-        images_resource = api.root.add_resource("apis").add_resource("images")
+    def create_api_resources(self):
+        images_resource = self.api.root.add_resource("apis").add_resource("images")
         
-        upload_resource = images_resource.add_resource("upload")
-        upload_integration = apigw.LambdaIntegration(upload_lambda)
+        self.create_upload_resource(images_resource)
+        self.create_get_image_resource(images_resource)
+
+    def create_upload_resource(self, parent_resource):
+        upload_resource = parent_resource.add_resource("upload")
+        upload_integration = apigw.LambdaIntegration(self.upload_lambda)
         upload_resource.add_method("POST", upload_integration)
 
-        image_resource = images_resource.add_resource("{uuid}")
-        get_image_integration = apigw.LambdaIntegration(get_image_lambda)
+    def create_get_image_resource(self, parent_resource):
+        image_resource = parent_resource.add_resource("{uuid}")
+        get_image_integration = apigw.LambdaIntegration(self.get_image_lambda)
         image_resource.add_method("GET", get_image_integration)
 
-        # Output the API Gateway URL
-        CfnOutput(self, "ApiGatewayUrl", value=api.url, description="The URL of the API Gateway")
+    def create_output(self):
+        CfnOutput(self, "ApiGatewayUrl", value=self.api.url, description="The URL of the API Gateway")
