@@ -58,14 +58,16 @@ class ImageProcessingLambdaStack(Stack):
     def create_face_detection_lambda(self):
         current_region = self.region
 
+        pillow_layer_arn = self.node.try_get_context("pillow_layer_arn")
         pillow_layer = lambda_.LayerVersion.from_layer_version_arn(
             self, "PillowLayer",
-            layer_version_arn=f"arn:aws:lambda:{current_region}:770693421928:layer:Klayers-p38-Pillow:10"
+            layer_version_arn=pillow_layer_arn
         )
 
+        numpy_layer_arn = self.node.try_get_context("numpy_layer_arn")
         numpy_layer = lambda_.LayerVersion.from_layer_version_arn(
             self, "NumpyLayer",
-            layer_version_arn=f"arn:aws:lambda:{current_region}:770693421928:layer:Klayers-p38-numpy:13"
+            layer_version_arn=numpy_layer_arn
         )
 
         face_detection_lambda = lambda_.Function(self, "FaceDetectionLambda",
