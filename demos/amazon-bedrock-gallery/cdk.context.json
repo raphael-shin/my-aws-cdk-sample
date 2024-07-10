@@ -1,7 +1,8 @@
 {
     "s3_bucket_name": "genai-gallery",
-    "s3_faces_image_path": "images/faces/",
-    "s3_masked_faces_image_path": "images/masked-faces/",
-    "s3_swapped_faces_image_path": "images/swapped-faces/",
-    "s3_results_image_path": "images/results"
+    "s3_base_images_path": "images/base/",
+    "s3_face_images_path": "images/face/",
+    "s3_masked_face_images_path": "images/masked-face/",
+    "s3_swapped_face_images_path": "images/swapped-face/",
+    "s3_result_images_path": "images/result"
 }

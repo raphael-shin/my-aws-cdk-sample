@@ -13,7 +13,7 @@ def lambda_handler(event, context):
     bucket = s3_event['bucket']['name']
     source_key = urllib.parse.unquote_plus(s3_event['object']['key'])
     uuid = os.path.basename(source_key).split('.')[0]
-    target_key = 'gallery/images/portrait_painting_italy.png'
+    target_key = 'gallery/images/portrait_painting_italy.png' # TODO: Change this to the target image key
     output_key = f"{os.environ['OUTPUT_PATH']}{uuid}.png"
     
     # Prepare the input for the SageMaker endpoint

@@ -5,7 +5,6 @@ from aws_cdk import aws_ecr as ecr
 from aws_cdk import aws_iam as iam
 from aws_cdk import aws_s3 as s3
 from aws_cdk import aws_s3_deployment as s3deploy
-from aws_cdk import custom_resources as cr
 from constructs import Construct
 
 class ByocGfpganCodeBuildStack(Stack):

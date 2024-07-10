@@ -9,8 +9,9 @@ class ApiGatewayStack(Stack):
         super().__init__(scope, construct_id, **kwargs)
 
         # Get the bucket name from context
-        s3_faces_image_bucket_name = self.node.try_get_context("s3_faces_image_path")
-        s3_results_image_bucket_name = self.node.try_get_context("s3_results_image_path")
+        s3_bucket_name = self.node.try_get_context("s3_bucket_name")
+        s3_face_images_path = self.node.try_get_context("s3_face_images_path")
+        s3_result_images_path = self.node.try_get_context("s3_result_images_path")
 
         # Create API Gateway
         api = apigw.RestApi(self, "AmazonBedrockGalleryImageApi",
@@ -23,7 +24,8 @@ class ApiGatewayStack(Stack):
             handler="upload.handler",
             code=lambda_.Code.from_asset(os.path.join("lambda", "apis/upload")),
             environment={
-                "BUCKET_NAME": s3_faces_image_bucket_name
+                "BUCKET_NAME": s3_bucket_name,
+                "OBJECT_PATH": s3_face_images_path
             })
 
         # Create Lambda function for image retrieval
@@ -32,7 +34,8 @@ class ApiGatewayStack(Stack):
             handler="get_image.handler",
             code=lambda_.Code.from_asset(os.path.join("lambda", "apis/get_image")),
             environment={
-                "BUCKET_NAME": s3_results_image_bucket_name
+                "BUCKET_NAME": s3_bucket_name,
+                "OBJECT_PATH": s3_result_images_path
             })
 
         # Create API Gateway resources and methods
