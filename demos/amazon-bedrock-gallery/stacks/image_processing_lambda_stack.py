@@ -74,6 +74,7 @@ class ImageProcessingLambdaStack(Stack):
             code=lambda_.Code.from_asset("lambda/face_detection"),
             timeout=Duration.seconds(300),
             environment={
+                "REGION": current_region,
                 "OUTPUT_PATH": self.s3_masked_face_images_path
             },
             layers=[pillow_layer, numpy_layer]

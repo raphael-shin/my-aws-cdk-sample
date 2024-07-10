@@ -34,13 +34,9 @@ def prepare_input_data(s3_event: Dict[str, Any]) -> Dict[str, str]:
 
     # Decode the URL-encoded object key
     source_object_key = urllib.parse.unquote_plus(encoded_object_key)
-
-    # Extract UUID from the source object key
     source_filename = os.path.basename(source_object_key)
-    uuid = os.path.splitext(source_filename)[0]
-
-    # Construct the output object key
     output_object_key = f"{os.environ['OUTPUT_PATH']}{source_filename}"
+    uuid = os.path.splitext(source_filename)[0]
 
     # Prepare and return the input data dictionary
     return {

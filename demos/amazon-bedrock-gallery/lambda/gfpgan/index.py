@@ -25,16 +25,18 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
 def prepare_input_data(event: Dict[str, Any]) -> Dict[str, str]:
     s3_event = event['Records'][0]['s3']
-    bucket = s3_event['bucket']['name']
-    source_key = urllib.parse.unquote_plus(s3_event['object']['key'])
-    output_key = f"{os.environ['OUTPUT_PATH']}{source_key}"
-    uuid = os.path.basename(source_key).split('.')[0]
+    bucket_name = s3_event['bucket']['name']
+    encoded_object_key = s3_event['object']['key']
+    source_object_key = urllib.parse.unquote_plus(encoded_object_key)
+    source_filename = os.path.basename(source_object_key)
+    output_object_key = f"{os.environ['OUTPUT_PATH']}{source_filename}"
+    uuid = os.path.splitext(source_filename)[0]
     
     return {
         'uuid': uuid,
-        'bucket': bucket,
-        'source': source_key,
-        'output': output_key
+        'bucket': bucket_name,
+        'source': source_object_key,
+        'output': output_object_key
     }
 
 def invoke_sagemaker_endpoint(input_data: Dict[str, str]) -> None:
