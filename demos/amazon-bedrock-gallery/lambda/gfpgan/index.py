@@ -27,8 +27,8 @@ def prepare_input_data(event: Dict[str, Any]) -> Dict[str, str]:
     s3_event = event['Records'][0]['s3']
     bucket = s3_event['bucket']['name']
     source_key = urllib.parse.unquote_plus(s3_event['object']['key'])
+    output_key = f"{os.environ['OUTPUT_PATH']}{source_key}"
     uuid = os.path.basename(source_key).split('.')[0]
-    output_key = f"{os.environ['OUTPUT_PATH']}{uuid}.png"
     
     return {
         'uuid': uuid,

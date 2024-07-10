@@ -10,7 +10,7 @@ class ByocGfpganEcrStack(Stack):
         self.repository = ecr.Repository(self, "ByocGfpganRepository", 
                                          repository_name="byoc-gfpgan-repo",
                                          removal_policy=RemovalPolicy.DESTROY,
-                                         auto_delete_images=True)
+                                         empty_on_delete=True)
 
         # Outputs
         CfnOutput(self, "ByocGfpganRepositoryUri", value=self.repository.repository_uri, description="The URI of the BYOC GFPGAN ECR repository")

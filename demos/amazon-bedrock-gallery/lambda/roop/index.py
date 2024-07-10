@@ -12,7 +12,7 @@ s3_client = boto3.client('s3')
 # Constants
 MAX_WAIT_TIME = 30  # Maximum wait time in seconds
 CHECK_INTERVAL = 1  # Time between checks in seconds
-TARGET_KEY = 'gallery/images/portrait_painting_italy.png'  # TODO: Change this to the target image key
+TARGET_KEY = 'images/base/portrait_painting_italy.png'  # TODO: Change this to the target image key
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     try:

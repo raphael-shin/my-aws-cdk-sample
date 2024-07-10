@@ -1,5 +1,5 @@
 {
-    "s3_bucket_name": "genai-gallery",
+    "s3_base_bucket_name": "genai-gallery",
     "s3_base_images_path": "images/base/",
     "s3_face_images_path": "images/face/",
     "s3_masked_face_images_path": "images/masked-face/",

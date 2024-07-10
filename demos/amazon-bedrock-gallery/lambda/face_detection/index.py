@@ -2,15 +2,20 @@ import boto3
 import copy
 from PIL import Image
 from io import BytesIO
+import urllib.parse
 import json
+import os
+
+s3_client = boto3.client('s3')
 
 def lambda_handler(event, context):
-    s3 = boto3.client('s3')
-    bucket_name = event['Records'][0]['s3']['bucket']['name']
-    key = event['Records'][0]['s3']['object']['key']
+    s3_event = event['Records'][0]['s3']
+    bucket = s3_event['bucket']['name']
+    source_key = urllib.parse.unquote_plus(s3_event['object']['key'])
+    output_key = f"{os.environ['OUTPUT_PATH']}{source_key}"
     
     # S3에서 이미지 파일을 로드
-    response = s3.get_object(Bucket=bucket_name, Key=key)
+    response = s3_client.get_object(Bucket=bucket, Key=source_key)
     image = Image.open(response['Body'])
     if image.mode == 'RGBA':
         image = image.convert('RGB')
@@ -22,17 +27,11 @@ def lambda_handler(event, context):
         # 추출한 얼굴 영역을 새로운 이미지로 저장
         cropped_image = cropped_image.crop((f_left, f_top, f_left + f_width, f_top + f_height))
         
-        # 새로운 S3 버킷과 키 지정
-        account_id = context.invoked_function_arn.split(":")[4]
-        new_bucket_name = f'bedrock-y-{account_id}'
-        new_key = 'gallery/images/masked-faces/' + key.split('/')[-1]
-        
-        
         # 추출한 이미지를 S3에 저장
         buffered = BytesIO()
         cropped_image.save(buffered, format="png")
         image_bytes = buffered.getvalue()
-        s3.put_object(Bucket=new_bucket_name, Key=new_key, Body=image_bytes)
+        s3_client.put_object(Bucket=bucket, Key=output_key, Body=image_bytes)
         
         return {
             'statusCode': 200,

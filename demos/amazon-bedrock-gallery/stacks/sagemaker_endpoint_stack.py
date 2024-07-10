@@ -1,12 +1,15 @@
-from aws_cdk import Stack, CfnOutput
+from aws_cdk import Stack, CustomResource
 from aws_cdk import aws_sagemaker as sagemaker
 from aws_cdk import aws_iam as iam
 from constructs import Construct
 
 class SageMakerEndpointStack(Stack):
-    def __init__(self, scope: Construct, construct_id: str, roop_image_uri: str, gfpgan_image_uri: str, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, roop_image_uri: str, gfpgan_image_uri: str, codebuild_status_resource: CustomResource, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
+        # Add a dependency on the CodeBuild status resource
+        self.node.add_dependency(codebuild_status_resource)
+        
         # Create IAM Role for SageMaker
         sagemaker_role = iam.Role(self, "SageMakerExecutionRole",
             assumed_by=iam.ServicePrincipal("sagemaker.amazonaws.com"),

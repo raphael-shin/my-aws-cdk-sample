@@ -14,7 +14,8 @@ class ImageProcessingLambdaStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, roop_endpoint_name: str, gfpgan_endpoint_name: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        self.s3_bucket_name = self.node.try_get_context("s3_bucket_name")
+        s3_base_bucket_name = self.node.try_get_context("s3_base_bucket_name")
+        self.s3_bucket_name = f"{s3_base_bucket_name}-{self.account}"
         self.s3_face_images_path = self.node.try_get_context("s3_face_images_path")
         self.s3_masked_face_images_path = self.node.try_get_context("s3_masked_face_images_path")
         self.s3_swapped_face_images_path = self.node.try_get_context("s3_swapped_face_images_path")
@@ -55,13 +56,16 @@ class ImageProcessingLambdaStack(Stack):
         )
 
     def create_face_detection_lambda(self):
+        current_region = self.region
+
         pillow_layer = lambda_.LayerVersion.from_layer_version_arn(
             self, "PillowLayer",
-            layer_version_arn="arn:aws:lambda:us-east-1:770693421928:layer:Klayers-p38-Pillow:10"
+            layer_version_arn=f"arn:aws:lambda:{current_region}:770693421928:layer:Klayers-p38-Pillow:10"
         )
+
         numpy_layer = lambda_.LayerVersion.from_layer_version_arn(
             self, "NumpyLayer",
-            layer_version_arn="arn:aws:lambda:us-east-1:770693421928:layer:Klayers-p38-numpy:13"
+            layer_version_arn=f"arn:aws:lambda:{current_region}:770693421928:layer:Klayers-p38-numpy:13"
         )
 
         face_detection_lambda = lambda_.Function(self, "FaceDetectionLambda",
@@ -70,7 +74,7 @@ class ImageProcessingLambdaStack(Stack):
             code=lambda_.Code.from_asset("lambda/face_detection"),
             timeout=Duration.seconds(300),
             environment={
-                "BUCKET_NAME": self.bucket.bucket_name
+                "OUTPUT_PATH": self.s3_masked_face_images_path
             },
             layers=[pillow_layer, numpy_layer]
         )

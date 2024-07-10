@@ -11,7 +11,8 @@ class ApiGatewayStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        self.s3_bucket_name = self.node.try_get_context("s3_bucket_name")
+        s3_base_bucket_name = self.node.try_get_context("s3_base_bucket_name")
+        self.s3_bucket_name = f"{s3_base_bucket_name}-{self.account}"
         self.s3_face_images_path = self.node.try_get_context("s3_face_images_path")
         self.s3_result_images_path = self.node.try_get_context("s3_result_images_path")
 
