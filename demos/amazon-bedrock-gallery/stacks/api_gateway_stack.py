@@ -2,7 +2,8 @@ from aws_cdk import (
     Stack,
     CfnOutput,
     aws_apigateway as apigw,
-    aws_lambda as lambda_
+    aws_lambda as lambda_,
+    aws_ssm as ssm
 )
 from constructs import Construct
 import os
@@ -21,6 +22,7 @@ class ApiGatewayStack(Stack):
         self.get_image_lambda = self.create_lambda_function("GetImageFunction", "get_image", self.s3_result_images_path)
 
         self.create_api_resources()
+        self.store_api_endpoints_in_ssm()
         self.create_output()
 
     def create_api_gateway(self):
@@ -31,7 +33,7 @@ class ApiGatewayStack(Stack):
     def create_lambda_function(self, id, handler, object_path):
         return lambda_.Function(self, id,
             runtime=lambda_.Runtime.PYTHON_3_9,
-            handler=f"{handler}.handler",
+            handler=f"index.handler",
             code=lambda_.Code.from_asset(os.path.join("lambda", "apis", handler)),
             environment={
                 "BUCKET_NAME": self.s3_bucket_name,
@@ -54,5 +56,21 @@ class ApiGatewayStack(Stack):
         get_image_integration = apigw.LambdaIntegration(self.get_image_lambda)
         image_resource.add_method("GET", get_image_integration)
 
+    def store_api_endpoints_in_ssm(self):
+        upload_endpoint = f"{self.api.url}apis/images/upload"
+        get_image_endpoint = f"{self.api.url}apis/images/"
+
+        ssm.StringParameter(self, "UploadApiEndpointParameter",
+            parameter_name="/genai-gallery/upload-image-api-endpoint",
+            string_value=upload_endpoint,
+            description="Upload Image API Endpoint URL"
+        )
+
+        ssm.StringParameter(self, "GetImageApiEndpointParameter",
+            parameter_name="/genai-gallery/get-image-api-endpoint",
+            string_value=get_image_endpoint,
+            description="Get Image API Endpoint URL"
+        )
+        
     def create_output(self):
         CfnOutput(self, "ApiGatewayUrl", value=self.api.url, description="The URL of the API Gateway")

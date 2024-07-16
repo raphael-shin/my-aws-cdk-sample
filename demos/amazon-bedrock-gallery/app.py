@@ -9,6 +9,7 @@ from stacks.codebuild_trigger_stack import CodeBuildTriggerStack
 from stacks.codebuild_status_checker_stack import CodeBuildStatusCheckerStack
 from stacks.sagemaker_endpoint_stack import SageMakerEndpointStack
 from stacks.image_processing_lambda_stack import ImageProcessingLambdaStack
+from stacks.api_gateway_stack import ApiGatewayStack
 
 app = cdk.App()
 
@@ -59,5 +60,11 @@ lambda_functions_stack = ImageProcessingLambdaStack(app, "ImageProcessingLambdaS
 
 # Add dependency to ensure Lambda Functions are created after the SageMaker Endpoints
 lambda_functions_stack.add_dependency(sagemaker_endpoint_stack)
+
+# Create the API Gateway stack
+api_gateway_stack = ApiGatewayStack(app, "ApiGatewayStack")
+
+# Add dependency to ensure API Gateway is created after the Lambda Functions
+api_gateway_stack.add_dependency(lambda_functions_stack)
 
 app.synth()
