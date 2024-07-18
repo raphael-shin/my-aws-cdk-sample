@@ -7,7 +7,7 @@ from typing import Dict, Any
 
 s3_client = boto3.client('s3')
 BUCKET_NAME = os.environ.get('BUCKET_NAME')
-OBJECT_PATH = os.environ.get('OUTPUT_PATH')
+OBJECT_PATH = os.environ.get('OBJECT_PATH')
 PRESIGNED_URL_TTL = int(os.environ.get('PRESIGNED_URL_TTL', 300))
 
 def create_response(status_code: int, body: Dict[str, Any]) -> Dict[str, Any]:
@@ -40,7 +40,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
         return create_response(200, {
             'uploadUrl': presigned_url,
-            'uuid': file_uuid
+            'uuid': file_uuid[:-4]
         })
 
     except Exception as e:

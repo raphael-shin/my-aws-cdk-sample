@@ -5,7 +5,7 @@ from typing import Dict, Any
 
 s3_client = boto3.client('s3')
 BUCKET_NAME = os.environ.get('BUCKET_NAME')
-OBJECT_PATH = os.environ.get('OUTPUT_PATH')
+OBJECT_PATH = os.environ.get('OBJECT_PATH')
 PRESIGNED_URL_TTL = int(os.environ.get('PRESIGNED_URL_TTL', 1800))
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
@@ -14,7 +14,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         if not uuid:
             return create_response(400, {'error': 'Invalid request: Missing UUID'})
 
-        object_key = f"{OBJECT_PATH}/{uuid}.png"
+        object_key = f"{OBJECT_PATH}{uuid}.png"
         presigned_url = generate_presigned_url(object_key)
 
         return create_response(200, {
