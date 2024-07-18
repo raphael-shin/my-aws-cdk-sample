@@ -9,6 +9,7 @@ from aws_cdk import (
     CfnOutput
 )
 from constructs import Construct
+from aws_cdk.aws_s3_deployment import BucketDeployment, Source
 
 class ImageProcessingLambdaStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, roop_endpoint_name: str, gfpgan_endpoint_name: str, **kwargs) -> None:
@@ -30,6 +31,9 @@ class ImageProcessingLambdaStack(Stack):
 
         self.add_s3_event_sources()
         self.create_outputs()
+
+        self.add_s3_cors_rule()
+        self.upload_base_image()
 
     def create_lambda_role(self):
         return iam.Role(self, "LambdaExecutionRole",
@@ -96,7 +100,7 @@ class ImageProcessingLambdaStack(Stack):
             removal_policy=RemovalPolicy.DESTROY,
             auto_delete_objects=True
         )
-
+    
     def add_s3_event_sources(self):
         self.add_s3_event_source(self.face_detection_lambda, self.s3_face_images_path)
         self.add_s3_event_source(self.roop_lambda, self.s3_masked_face_images_path)
@@ -116,3 +120,23 @@ class ImageProcessingLambdaStack(Stack):
     def create_lambda_outputs(self, prefix, lambda_func):
         CfnOutput(self, f"{prefix}LambdaName", value=lambda_func.function_name, description=f"The name of the {prefix} Lambda function")
         CfnOutput(self, f"{prefix}LambdaArn", value=lambda_func.function_arn, description=f"The ARN of the {prefix} Lambda function")
+
+
+
+    def add_s3_cors_rule(self):
+        self.bucket.add_cors_rule(
+            allowed_methods=[s3.HttpMethods.PUT],
+            allowed_origins=["*"],
+            allowed_headers=["*"],
+            max_age=3000
+        )
+
+
+    def upload_base_image(self):
+        return BucketDeployment(
+            self, 
+            "UploadBaseImage", 
+            sources=[Source.asset("./assets/images")],
+            destination_bucket=self.bucket,
+            destination_key_prefix= "images"
+        )
