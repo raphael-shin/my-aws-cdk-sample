@@ -69,21 +69,28 @@ GenAI Gallery를 배포하려면 다음 단계를 따르세요:
 
 6. Check CDK deploy outputs:
 
-### Step 2: Deploy Frontend
+### Step 2: Run Frontend Application
 
 1. backend를 배포합니다.
 2. 배포가 완료되면 (약 30분 소요) 다음과 유사한 출력을 받게 됩니다:
 
    ```
-   Amazon API Gateway Endpoint URL: https://xxxxxxxxx.cloudfront.net
+   Amazon API Gateway Endpoint URL: https://xxxxxxxxxx.execute-api.xxxxxxxxxx.amazonaws.com/prod
    ```
 
-3. frontend를 배포합니다.
-4. 배포가 완료되면 (약 5분 소요) 다음과 유사한 출력을 받게 됩니다:
-
-   ```
-   Frontend URL: https://xxxxxxxxx.cloudfront.net
-   ```
+3. frontend 폴더의 `.env` 파일에서 `REACT_APP_API_ENDPOINT={your backend Amazon API Gateway endpoint url}`의 `{your backend Amazon API Gateway endpoint url}` 부분을 위의 API Gateway Endpoint URL로 변경합니다.
+4. backend 디렉토리에 있었을 경우 아래의 명령어를 통하여 frontend 디렉토리로 이동합니다.
+    ```
+        cd ../frontend
+    ```
+5. 디펜던시를 설치합니다.
+    ```
+        npm install
+    ```
+6. 아래의 명령어를 통해서 애플리케이션을 실행합니다.
+    ```
+        npm start
+    ```
 
 ## Contacts
 
