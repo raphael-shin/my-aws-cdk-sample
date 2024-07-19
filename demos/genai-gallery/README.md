@@ -1,6 +1,10 @@
 # GenAI Gallery
 
-This repository is a sample project that utilizes [Amazon Bedrock](https://aws.amazon.com/bedrock/) for generative AI, to create images of historical figures. It then uses a SageMaker Endpoint to synthesize these images with users' selfie photos, producing composite results. This showcase demonstrates the integration of various AWS AI services for creative image generation and manipulation.
+![](./docs/images/gallery.jpg)
+
+This repository is a sample project that utilizes [Amazon Bedrock](https://aws.amazon.com/bedrock/) for generative AI, to create images of historical figures. It then uses a SageMaker Endpoint to synthesize these images with users' selfie photos, producing composite results. 
+
+This showcase demonstrates the integration of various AWS AI services for creative image generation and manipulation.
 
 ## Architecture
 
