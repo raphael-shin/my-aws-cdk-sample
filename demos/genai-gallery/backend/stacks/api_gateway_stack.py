@@ -39,8 +39,8 @@ class ApiGatewayStack(Stack):
         self.create_output()
 
     def create_api_gateway(self):
-        return apigw.RestApi(self, "AmazonBedrockGalleryImageApi",
-            rest_api_name="Amazon Bedrock Gallery Image API",
+        return apigw.RestApi(self, "GenAIGalleryImageApi",
+            rest_api_name="GenAI Gallery Image API",
             description="This service processes images.")
 
     def create_lambda_function(self, id, handler, object_path):
