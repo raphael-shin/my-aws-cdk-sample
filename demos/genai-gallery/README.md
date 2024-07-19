@@ -14,18 +14,15 @@ Key Components:
 
 ## Deploy
 
-GenAI Gallery를 배포하려면 다음 단계를 따르세요:
+> [!Important]
+> - You have installed the latest version of [AWS CDK](https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html)
+> - You have an [AWS account](https://aws.amazon.com/free/)
+> - You have the necessary permissions to create and manage AWS resources
+> - You must use a region where [Amazon Bedrock is supported](https://docs.aws.amazon.com/bedrock/latest/userguide/bedrock-regions.html).
 
 ### Prerequisites
 
-1. Before you begin, ensure you have met the following requirements:
-
-    * You have installed the latest version of [AWS CDK](https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html)
-    * You have an [AWS account](https://aws.amazon.com/free/)
-    * You have the necessary permissions to create and manage AWS resources
-    * You have a [GitHub account](https://github.com/) and a personal access token with appropriate permissions
-
-2. Clone the repository:
+1. Clone the repository:
     ```
     https://github.com/raphael-shin/my-aws-cdk-sample.git
     ```
@@ -53,7 +50,12 @@ GenAI Gallery를 배포하려면 다음 단계를 따르세요:
     aws configure
     ```
 
-5. Update the `cdk.context.json` file with your aws region, and other configuration details.
+5. Prepare deploy CDK:
+    ```
+    cdk bootstrap aws://<account id>/<your-aws-region>
+    ```
+
+6. Update the `cdk.context.json` file with your aws region, and other configuration details.
     ```
     {
         "s3_base_bucket_name": "genai-gallery",
@@ -67,29 +69,44 @@ GenAI Gallery를 배포하려면 다음 단계를 따르세요:
     }
     ```
 
-6. Check CDK deploy outputs:
+6. Deploy CDK stacks:
+    ```
+    cdk deploy --require-approval never --all
+    ```
 
 ### Step 2: Run Frontend Application
 
-1. backend를 배포합니다.
-2. 배포가 완료되면 (약 30분 소요) 다음과 유사한 출력을 받게 됩니다:
+1. If step 1 is completed successfully, You will receive output similar to the following. The URL of the Amazon API Gateway Endpoint will be output to `ApiGatewayStack.ApiGatewayUrl`, so record that address and use it for frontend deployment.
+    ```
+    ✅  ApiGatewayStack
 
-   ```
-   Amazon API Gateway Endpoint URL: https://xxxxxxxxxx.execute-api.xxxxxxxxxx.amazonaws.com/prod
-   ```
+    ✨  Deployment time: 68.13s
 
-3. frontend 폴더의 `.env` 파일에서 `REACT_APP_API_ENDPOINT={your backend Amazon API Gateway endpoint url}`의 `{your backend Amazon API Gateway endpoint url}` 부분을 위의 API Gateway Endpoint URL로 변경합니다.
-4. backend 디렉토리에 있었을 경우 아래의 명령어를 통하여 frontend 디렉토리로 이동합니다.
+    Outputs:
+    ApiGatewayStack.GenAIGalleryImageApiEndpoint2DF4C2F5 = https://xxxxx.execute-api.us-east-1.amazonaws.com/prod/
+    ApiGatewayStack.ApiGatewayUrl = https://xxxxx.execute-api.us-east-1.amazonaws.com/prod/
+    Stack ARN:
+    arn:aws:cloudformation:us-east-1:xxxxx:stack/ApiGatewayStack/14bb1380-4566-11ef-ac05-0e7a94e90b7d
     ```
-        cd ../frontend
+
+3. In the `.env` file of the frontend folder, replace the `{your backend Amazon API Gateway endpoint url}` part of `REACT_APP_API_ENDPOINT={your backend Amazon API Gateway endpoint url}` with the API Gateway Endpoint URL mentioned above.
     ```
-5. 디펜던시를 설치합니다.
+    REACT_APP_API_ENDPOINT=https://xxxxx.execute-api.us-east-1.amazonaws.com/prod/
     ```
-        npm install
+
+4. If you were in the backend directory, move to the frontend directory using the command below.
     ```
-6. 아래의 명령어를 통해서 애플리케이션을 실행합니다.
+    cd ../frontend
     ```
-        npm start
+
+5. Install the required dependencies:
+    ```
+    npm install
+    ```
+
+6. Run the application using the command below:
+    ```
+    npm start
     ```
 
 ## Contacts
