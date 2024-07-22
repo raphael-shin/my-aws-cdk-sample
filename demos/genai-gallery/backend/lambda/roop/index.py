@@ -3,6 +3,7 @@ import boto3
 import os
 import urllib.parse
 import time
+import random
 from typing import Dict, Any
 
 # Initialize AWS clients
@@ -12,7 +13,7 @@ s3_client = boto3.client('s3')
 # Constants
 MAX_WAIT_TIME = 30  # Maximum wait time in seconds
 CHECK_INTERVAL = 1  # Time between checks in seconds
-TARGET_KEY = 'images/base/portrait_painting_italy.png'  # TODO: Change this to the target image key
+BASE_IMAGE_PREFIX = 'images/base/'
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     try:
@@ -35,14 +36,28 @@ def prepare_input_data(s3_event: Dict[str, Any]) -> Dict[str, str]:
     output_object_key = f"{os.environ['OUTPUT_PATH']}{source_filename}"
     uuid = os.path.splitext(source_filename)[0]
 
+    # Get a random target image
+    target_key = get_random_image(bucket_name, BASE_IMAGE_PREFIX)
+
     # Prepare and return the input data dictionary
     return {
         'uuid': uuid,
         'bucket': bucket_name,
         'source': source_object_key,
-        'target': TARGET_KEY,
+        'target': target_key,
         'output': output_object_key
     }
+
+def get_random_image(bucket: str, prefix: str) -> str:
+    response = s3_client.list_objects_v2(Bucket=bucket, Prefix=prefix)
+    if 'Contents' not in response:
+        raise Exception(f"No images found in {prefix}")
+    
+    images = [obj['Key'] for obj in response['Contents'] if obj['Key'].lower().endswith(('.png'))]
+    if not images:
+        raise Exception(f"No valid images found in {prefix}")
+    
+    return random.choice(images)
 
 def invoke_sagemaker_endpoint(input_data: Dict[str, str]) -> None:
     sagemaker_runtime.invoke_endpoint(
