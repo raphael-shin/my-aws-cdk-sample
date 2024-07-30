@@ -1,4 +1,5 @@
 {
+	"access_key": "wJalrXUtnFEMIAK7MDENGBbPxRfiCYEXAMPLEKEY",
     "s3_base_bucket_name": "genai-gallery",
     "s3_base_images_path": "images/base/",
     "s3_face_images_path": "images/face/",
