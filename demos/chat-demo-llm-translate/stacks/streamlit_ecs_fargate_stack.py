@@ -7,12 +7,13 @@ from aws_cdk import (
     aws_ecr_assets as ecr_assets,
     aws_ecs_patterns as ecs_patterns,
     aws_iam as iam,
+    aws_dynamodb as dynamodb
 )
 from constructs import Construct
 
 class StreamlitEcsFargateStack(Stack):
 
-    def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, dynamodb_table: dynamodb.Table, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         # Create a VPC
@@ -21,13 +22,12 @@ class StreamlitEcsFargateStack(Stack):
         # Build and push Docker image to ECR
         image = ecr_assets.DockerImageAsset(self, "StreamlitDockerImage",
             directory='./app',
-            platform=ecr_assets.Platform.LINUX_ARM64
+            platform=ecr_assets.Platform.LINUX_AMD64
         )
 
         # Create ECS cluster
         cluster = ecs.Cluster(self, "StreamlitCluster", vpc=vpc)
 
-        # Create IAM role for the Fargate task
         task_role = iam.Role(self, "StreamlitTaskRole",
             assumed_by=iam.ServicePrincipal("ecs-tasks.amazonaws.com")
         )
@@ -43,6 +43,23 @@ class StreamlitEcsFargateStack(Stack):
             ]
         ))
 
+        # Add explicit DynamoDB permissions to the task role
+        task_role.add_to_policy(iam.PolicyStatement(
+            actions=[
+                "dynamodb:PutItem",
+                "dynamodb:GetItem",
+                "dynamodb:UpdateItem",
+                "dynamodb:DeleteItem",
+                "dynamodb:Query",
+                "dynamodb:Scan",
+                "dynamodb:CreateTable"
+            ],
+            resources=[dynamodb_table.table_arn]
+        ))
+
+        # Add DynamoDB permissions to the task role
+        dynamodb_table.grant_read_write_data(task_role)
+
         # Create Fargate service
         fargate_service = ecs_patterns.ApplicationLoadBalancedFargateService(
             self, "StreamlitFargateService",
@@ -56,12 +73,13 @@ class StreamlitEcsFargateStack(Stack):
                 task_role=task_role,
                 environment={
                     "STREAMLIT_SERVER_PORT": "8501",
-                    "STREAMLIT_SERVER_ADDRESS": "0.0.0.0"
+                    "STREAMLIT_SERVER_ADDRESS": "0.0.0.0",
+                    "DYNAMODB_TABLE_NAME": dynamodb_table.table_name
                 }
             ),
             listener_port=80,
             runtime_platform=ecs.RuntimePlatform(
-                cpu_architecture=ecs.CpuArchitecture.ARM64,
+                cpu_architecture=ecs.CpuArchitecture.X86_64,
                 operating_system_family=ecs.OperatingSystemFamily.LINUX
             )
         )
